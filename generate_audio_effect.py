@@ -70,20 +70,15 @@ def get_project_media_folder():
     media_pool = project.GetMediaPool()
     root_folder = media_pool.GetRootFolder()
 
-    # Find any existing media file
-    media_items = root_folder.GetClipList()
-    if not media_items:
-        raise RuntimeError("❌ No media files found in the Media Pool.")
-
-    # Extract folder path of first media file that is not the timeline
+    # Find any existing media file that is not the timeline
     media_file = None
-    for item in media_items:
+    for item in root_folder.GetClipList():
         if item.GetClipProperty()["File Name"] != "Timeline 1":
             media_file = item
             break
+
     if media_file is None:
         raise RuntimeError("❌ No media files found in the Media Pool other than Timeline 1.")
-
 
     media_file_path = media_file.GetClipProperty("File Path")
     project_media_folder = os.path.dirname(media_file_path)
@@ -160,10 +155,8 @@ def generate_sound_effect(prompt):
     else:
         print(f"❌ API Error {response.status_code}: {response.text}")
 
-    # Close the popup after generating sound
-    print("🔹 Closing popup window...")
-    win.Hide()
-    dispatcher.ExitLoop()
+    # Keep the UI open, clear input for new prompt
+    print("🔹 Ready for next prompt.")
 
 # Event Handler for button click
 def OnGenerate(ev):
