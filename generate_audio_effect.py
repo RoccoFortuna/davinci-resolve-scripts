@@ -4,7 +4,7 @@ This script generates a sound effect based on user input using the ElevenLabs AP
 
 """ --- boilerplate code --- """
 #!/usr/bin/env python
-resolve = app.GetResolve()
+resolve = app.GetResolve()  # `app` is a davinci native variable
 fusion = resolve.Fusion()
 """ --- end of boilerplate code --- """
 
