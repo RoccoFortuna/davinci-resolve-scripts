@@ -4,8 +4,7 @@ This script generates a sound effect based on user input using the ElevenLabs AP
 
 """ --- boilerplate code --- """
 #!/usr/bin/env python
-from utils.python_get_resolve import GetResolve
-resolve = GetResolve()
+resolve = app.GetResolve()
 fusion = resolve.Fusion()
 """ --- end of boilerplate code --- """
 
@@ -83,7 +82,7 @@ def get_project_media_folder():
             media_file = item
             break
     if media_file is None:
-        raise RuntimeError("❌ No media files found in the Media Pool other than Timelines.")
+        raise RuntimeError("❌ No media files found in the Media Pool other than Timeline 1.")
 
 
     media_file_path = media_file.GetClipProperty("File Path")
