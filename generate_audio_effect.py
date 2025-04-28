@@ -9,9 +9,8 @@ fusion = resolve.Fusion()
 """ --- end of boilerplate code --- """
 
 import os
+import datetime
 import requests
-import base64
-import shutil
 
 from utils import get_project_media_folder, move_file_to_media_pool, import_and_append_to_timeline
 
@@ -57,10 +56,17 @@ win = dispatcher.AddWindow({
 
 def generate_sound_effect(prompt):
     """Calls ElevenLabs API to generate a sound effect, saves it, moves it, and appends to timeline."""
-    print(f"✅ Received user prompt: {prompt}")  # Print user input
+    print(f"✅ Received user prompt: {prompt}")
 
-    # Format filename from prompt
-    formatted_filename = prompt.replace(" ", "_") + ".mp3"
+    # Replace unsafe characters and format filename
+    safe_prompt = prompt.replace(" ", "_").replace("/", "_").replace("\\", "_")
+
+    # Generate a timestamp up to milliseconds
+    now = datetime.datetime.now()
+    timestamp = now.strftime("%d-%m-%Y_%H-%M-%S-%f")[:-3]  # Trim microseconds to milliseconds
+
+    # Final formatted filename
+    formatted_filename = f"{safe_prompt}_{timestamp}.mp3"
     sound_file_path = os.path.join(DOWNLOADS_FOLDER, formatted_filename)
 
     payload = {
@@ -98,7 +104,7 @@ def generate_sound_effect(prompt):
     else:
         print(f"❌ API Error {response.status_code}: {response.text}")
 
-    # Keep the UI open, clear input for new prompt
+    # Keep UI open
     print("🔹 Ready for next prompt.")
 
 # Event Handler for button click
@@ -122,7 +128,7 @@ def OnClose(ev):
 
 # Assign event handlers
 win.On[genID].Clicked = OnGenerate
-win.On[winID].Close = OnClose  # Ensure it properly closes
+win.On[winID].Close = OnClose
 
 print("🔹 Showing UI window")
 # Show UI
