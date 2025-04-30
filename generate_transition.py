@@ -96,7 +96,16 @@ def create_generation(prompt, keyframes):
         "aspect_ratio": "16:9",
         "loop": False
     }
+    import json
+    print("Payload being sent to Luma API:", json.dumps(payload, indent=2))
+
     res = requests.post(url, json=payload, headers=HEADERS)
+    if res.status_code != 201:
+        print("❌ Response content:")
+        print(res.text)
+        print("❌ Response headers:")
+        print(res.headers)
+
     res.raise_for_status()
     return res.json()["id"]
 
