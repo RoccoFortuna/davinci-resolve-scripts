@@ -91,6 +91,7 @@ def upload_image_to_tmpbin(image_path):
 def create_generation(prompt, keyframes):
     url = "https://api.lumalabs.ai/dream-machine/v1/generations"
     payload = {
+        "model": "ray-2",
         "prompt": prompt,
         "keyframes": keyframes,
         "aspect_ratio": "16:9",
