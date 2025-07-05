@@ -12,11 +12,15 @@ import os
 import datetime
 import requests
 
-from utils import get_project_media_folder, move_file_to_media_pool, import_and_append_to_timeline
+from utils import get_project_media_folder, move_file_to_media_pool, import_and_append_to_timeline, load_env
 
+load_env()
 
-# Constants
-ELEVENLABS_API_KEY = "sk_9d868efc2daeb7615b6b2c60711dc0a99305d7c58216f6da"
+# Then use any env var:
+ELEVENLABS_API_KEY = os.getenv("ELEVENLABS_API_KEY")
+if not ELEVENLABS_API_KEY:
+    raise ValueError("ELEVENLABS_API_KEY missing in environment variables. Please set it in your .env file.")
+
 ELEVENLABS_URL = "https://api.elevenlabs.io/v1/sound-generation"
 DOWNLOADS_FOLDER = os.path.expanduser("~/Downloads")
 

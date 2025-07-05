@@ -1,3 +1,6 @@
+from pathlib import Path
+from dotenv import load_dotenv
+import sys
 import os
 import shutil
 
@@ -58,3 +61,23 @@ def import_and_append_to_timeline(media_pool, project, file_path):
 
     media_pool.AppendToTimeline(imported_clips)
     print("✅ Media successfully added to the timeline.")
+
+
+def load_env():
+    """
+    Loads .env file from the same directory as the script,
+    or uses the current working directory as fallback.
+    Makes env vars available via os.getenv.
+    """
+    script_path = Path(sys.argv[0]).resolve()
+    script_dir = script_path.parent
+
+    if not script_path.exists():
+        print("sys.argv[0] empty or invalid, using CWD")
+        script_dir = Path.cwd()
+
+    env_path = script_dir / ".env"
+    load_dotenv(dotenv_path=env_path)
+
+    print(f"✅ Loaded .env from: {env_path}")
+    print(f"CWD: {os.getcwd()}")

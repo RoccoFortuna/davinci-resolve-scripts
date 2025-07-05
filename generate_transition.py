@@ -5,18 +5,24 @@ fusion = resolve.Fusion()
 """ --- end of boilerplate code --- """
 
 import os
+import sys
 import time
 import shutil
 import requests
 import base64
 from dotenv import load_dotenv
 from utils import get_project_media_folder, import_and_append_to_timeline, move_file_to_media_pool
-load_dotenv()
+from utils import load_env
 
-API_KEY = "luma-6130c11a-162c-45fb-a9d9-f75e11e4ab26-a3ce4a8d-0bfc-4fb8-aaf1-1c3e3a87cbdc"
+load_env()
+
+# Then use any env var:
+LUMA_API_KEY = os.getenv("LUMA_API_KEY")
+if not LUMA_API_KEY:
+    raise ValueError("LUMA_API_KEY missing in environment variables. Please set it in your .env file.")
 
 HEADERS = {
-    "Authorization": f"Bearer {API_KEY}",
+    "Authorization": f"Bearer {LUMA_API_KEY}",
     "Content-Type": "application/json",
     "Accept": "application/json"
 }
