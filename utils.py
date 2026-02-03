@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import sys
 import os
 import shutil
+import requests
 
 
 def get_project_media_folder(resolve):
@@ -81,3 +82,126 @@ def load_env():
 
     print(f"✅ Loaded .env from: {env_path}")
     print(f"CWD: {os.getcwd()}")
+
+
+def upload_file_to_tmpbin(file_path):
+    """
+    Uploads a file (image or video) to tmpfiles.org temporary hosting.
+    Returns a direct download URL.
+
+    Args:
+        file_path (str): Path to file to upload
+
+    Returns:
+        str: Direct download URL for the uploaded file
+
+    Raises:
+        requests.HTTPError: If upload fails
+        FileNotFoundError: If file doesn't exist
+    """
+    if not os.path.exists(file_path):
+        raise FileNotFoundError(f"❌ File not found: {file_path}")
+
+    print(f"🔹 Uploading file to temporary hosting: {os.path.basename(file_path)}")
+
+    with open(file_path, "rb") as f:
+        file_data = f.read()
+
+    response = requests.post(
+        "https://tmpfiles.org/api/v1/upload",
+        files={"file": (os.path.basename(file_path), file_data)}
+    )
+    response.raise_for_status()
+
+    # Convert tmpfiles.org URL to direct download URL with HTTPS
+    original_url = response.json()["data"]["url"]
+    download_url = original_url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
+
+    # Ensure HTTPS (required by Grok API)
+    if download_url.startswith("http://"):
+        download_url = download_url.replace("http://", "https://", 1)
+
+    print(f"✅ File uploaded successfully")
+    print(f"🔗 URL: {download_url}")
+
+    return download_url
+
+
+def get_clip_duration_seconds(clip, fps):
+    """
+    Calculate clip duration in seconds
+
+    Args:
+        clip: DaVinci Resolve clip object
+        fps (float): Timeline frame rate
+
+    Returns:
+        float: Duration in seconds
+    """
+    start_frame = clip.GetStart()
+    end_frame = clip.GetEnd()
+    duration_frames = end_frame - start_frame
+    duration_seconds = duration_frames / fps
+
+    return duration_seconds
+
+
+def validate_clip_for_grok(clip, fps, max_duration=8.7):
+    """
+    Validate if clip meets Grok API constraints (max 8.7 seconds)
+
+    Args:
+        clip: DaVinci Resolve clip object
+        fps (float): Timeline frame rate
+        max_duration (float): Maximum allowed duration in seconds
+
+    Returns:
+        tuple: (bool, float, str) - (is_valid, duration_seconds, message)
+    """
+    duration = get_clip_duration_seconds(clip, fps)
+
+    if duration > max_duration:
+        message = (
+            f"⚠️ Clip duration ({duration:.2f}s) exceeds Grok's maximum ({max_duration}s). "
+            f"Please trim the clip or select a shorter segment."
+        )
+        return False, duration, message
+
+    return True, duration, f"✅ Clip duration: {duration:.2f}s (valid)"
+
+
+def get_video_duration(video_path):
+    """
+    Get video duration in seconds using ffprobe
+
+    Args:
+        video_path (str): Path to video file
+
+    Returns:
+        float: Duration in seconds, or None if unable to determine
+    """
+    try:
+        import subprocess
+
+        # Try common ffprobe locations
+        ffprobe_paths = [
+            '/opt/homebrew/bin/ffprobe',  # Homebrew on Apple Silicon
+            '/usr/local/bin/ffprobe',      # Homebrew on Intel Mac
+            'ffprobe'                       # In PATH
+        ]
+
+        for ffprobe in ffprobe_paths:
+            try:
+                result = subprocess.run(
+                    [ffprobe, '-v', 'error', '-show_entries', 'format=duration',
+                     '-of', 'default=noprint_wrappers=1:nokey=1', video_path],
+                    capture_output=True, text=True, timeout=5
+                )
+                if result.returncode == 0:
+                    return float(result.stdout.strip())
+            except FileNotFoundError:
+                continue  # Try next path
+
+    except (subprocess.TimeoutExpired, ValueError, Exception) as e:
+        print(f"⚠️ Could not determine video duration: {e}")
+    return None
